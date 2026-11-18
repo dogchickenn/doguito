@@ -13,10 +13,7 @@
       overflow: hidden;
       background: #111;
     }
-    body {
-      display: grid;
-      place-items: center;
-    }
+    body { display: grid; place-items: center; }
     img {
       display: block;
       width: 100%;
@@ -33,17 +30,29 @@
   <script>
     const image = document.getElementById("dog");
 
-    function nextDog() {
-      const next = new Image();
-      next.onload = () => {
-        image.classList.add("fade");
-        setTimeout(() => {
-          image.src = next.src;
-          image.classList.remove("fade");
-        }, 350);
-      };
-      next.onerror = () => setTimeout(nextDog, 1000);
-      next.src = "https://dog.ceo/api/breeds/image/random?refresh=" + Date.now();
+    async function nextDog() {
+      try {
+        const response = await fetch("https://dog.ceo/api/breeds/image/random");
+        if (!response.ok) throw new Error("Falha ao buscar imagem");
+
+        const data = await response.json();
+        if (data.status !== "success" || !data.message) {
+          throw new Error("Resposta inválida da API");
+        }
+
+        const preload = new Image();
+        preload.onload = () => {
+          image.classList.add("fade");
+          setTimeout(() => {
+            image.src = preload.src;
+            image.classList.remove("fade");
+          }, 350);
+        };
+        preload.onerror = () => console.error("Não foi possível carregar a foto.");
+        preload.src = data.message;
+      } catch (error) {
+        console.error("Erro ao carregar cachorro:", error);
+      }
     }
 
     nextDog();
